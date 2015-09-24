@@ -1,0 +1,133 @@
+/* Tools:
+ *   Bowtie2
+ *   SAMtools
+ *   Bismark
+ *   SRAtools
+ *   Sherman
+ *   FastQC
+ *   cutadapt
+ *   trim galore
+ *   r-base
+ */
+
+// TASK DEFINITION
+
+// untar
+deftask untar( <out( File )> : tar( File ) )in bash *{
+  tar xf $tar
+  out=`tar tf $tar`
+}*
+
+// cat
+deftask cat( out( File ) : <file( File )> )in bash *{
+  cat ${file[@]} > $out
+}*
+
+// fastq-dump
+deftask fastq-dump( fastq1( File ) fastq2( File ) : sra( File ) )in bash *{
+
+  fastq=$sra.fastq
+
+  fastq-dump --split-3 $sra
+
+  base=${sra##*/}
+  base=${base::-4}
+  fastq1=${base}_1.fastq
+  fastq2=${base}_2.fastq
+}*
+
+// gunzip
+deftask gunzip( out( File ) : gz( File ) )in bash *{
+  gzip -c -d $gz > $out
+}*
+
+// fastqc
+deftask fastqc( zip( File ) : fastq( File ) )in bash *{
+  fastqc -f fastq --noextract -o ./ $fastq
+  zip=`ls *.zip`
+}*
+
+// bismark    
+deftask bismark-prepare( idx( File ) : fa( File ) )in bash *{
+  mkdir ref
+  (cd ref; ln -s ../$fa)
+  bismark_genome_preparation --bowtie2 ref
+  # idx=idx
+  tar chf $idx ref
+}*
+
+deftask bismark-align( bam( File ) : idx( File ) [fastq1( File ) fastq2( File )] )in bash *{
+  tar xf $idx
+  bismark --bowtie2 -D 5 -R 1 -n 1 ref -1 $fastq1 -2 $fastq2
+  bam=${fastq1}_bismark_bt2_pe.bam
+}*
+
+deftask bismark-extract( splitreport( File ) mbias( File ) : bam( File ) )in bash *{
+  bismark_methylation_extractor $bam
+
+  splitreport=${bam}_splitting_report.txt
+  mbias=${bam::-4}.M-bias.txt
+}*
+
+// sherman
+deftask sherman( fastq1( File ) fastq2( File ): len nread cr <fa( File )> )in bash *{
+  mkdir ref
+  (cd ref; for i in ${fa[@]}; do ln -s ../$i; done)
+  Sherman -pe -cr $cr -l $len -n $nread --genome_folder ref
+  fastq1=simulated_1.fastq
+  fastq2=simulated_2.fastq
+}*
+
+deftask sample( <s> : lo hi n ) in r *{
+  s = sample( lo:hi, n )
+}*
+
+deftask trim-galore( trimmed1( File ) trimmed2( File ) : [fastq1( File ) fastq2( File )] )in bash *{
+  trim_galore --paired $fastq1 $fastq2
+  trimmed1=`ls *_val_1.fq`
+  trimmed2=`ls *_val_2.fq`
+}*
+
+
+// INPUT DATA
+
+lonread  =  9000;
+hinread  = 10000;
+nsplit   =     1;
+len      =   100;
+cr       =    10;
+
+fa-tar = 'hg38/hg38.tar';
+
+
+// WORKFLOW DEFINITION
+
+fa = untar( tar: fa-tar );
+
+idx = bismark-prepare( fa: fa );
+
+s = sample(
+  lo: lonread,
+  hi: hinread,
+  n:  nsplit );
+
+fastq1 fastq2 = sherman(
+  len:   len,
+  nread: s,
+  fa:    fa,
+  cr:    cr );
+
+trimmed1 trimmed2 = trim-galore( fastq1: fastq1, fastq2: fastq2 );
+
+
+bam = bismark-align(
+  idx:    idx,
+  fastq1: trimmed1,
+  fastq2: trimmed2 );
+
+out = bismark-extract( bam: bam );
+
+qc = fastqc( fastq: fastq1 fastq2 );
+
+// QUERY
+out qc;

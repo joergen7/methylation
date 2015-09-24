@@ -1,0 +1,26 @@
+---
+driver:
+  name: vagrant
+
+provisioner:
+  name: chef_zero
+
+platforms:
+  - name: ubuntu-14.04
+
+suites:
+  - name: default
+    run_list:
+      - recipe[methylation::_common]
+      - recipe[chef-bioinf-worker::bismark]
+      - recipe[chef-bioinf-worker::cutadapt]
+      - recipe[chef-bioinf-worker::fastqc]
+      - recipe[chef-bioinf-worker::sherman]
+      - recipe[chef-bioinf-worker::bsmooth]
+      - recipe[chef-bioinf-worker::bsseq]
+      - recipe[chef-bioinf-worker::sratools]
+      - recipe[chef-bioinf-worker::trimgalore]
+      - recipe[chef-bioinf-worker::hg38]
+      - recipe[chef-cuneiform::default]
+      - recipe[methylation::default]
+    attributes:
