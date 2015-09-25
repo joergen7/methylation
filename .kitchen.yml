@@ -21,6 +21,8 @@ suites:
       - recipe[chef-bioinf-worker::sratools]
       - recipe[chef-bioinf-worker::trimgalore]
       - recipe[chef-bioinf-worker::hg38]
+      - recipe[chef-bioinf-worker::shrimp]
+      - recipe[chef-bioinf-worker::pass]
       - recipe[chef-cuneiform::default]
       - recipe[methylation::default]
     attributes:
