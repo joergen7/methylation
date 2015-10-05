@@ -52,14 +52,13 @@ deftask bismark-prepare( idx( File ) : fa( File ) )in bash *{
   mkdir ref
   (cd ref; ln -s ../$fa)
   bismark_genome_preparation --bowtie2 ref
-  # idx=idx
   tar chf $idx ref
 }*
 
-deftask bismark-align( bam( File ) : idx( File ) [fastq1( File ) fastq2( File )] )in bash *{
+deftask bismark-align( bam( File ) : idx( File ) fastq( File  ) )in bash *{
   tar xf $idx
-  bismark --bowtie2 -D 5 -R 1 -n 1 ref -1 $fastq1 -2 $fastq2
-  bam=${fastq1}_bismark_bt2_pe.bam
+  bismark --bowtie2 -N 1 -L 20 --phred33-quals ref $fastq
+  bam=${fastq}_bismark_bt2.bam
 }*
 
 deftask bismark-extract( splitreport( File ) mbias( File ) : bam( File ) )in bash *{
@@ -70,34 +69,33 @@ deftask bismark-extract( splitreport( File ) mbias( File ) : bam( File ) )in bas
 }*
 
 // sherman
-deftask sherman( fastq1( File ) fastq2( File ): len nread cr <fa( File )> )in bash *{
+deftask sherman( fastq( File ): len nread cr e <fa( File )> )in bash *{
   mkdir ref
   (cd ref; for i in ${fa[@]}; do ln -s ../$i; done)
-  Sherman -pe -cr $cr -l $len -n $nread --genome_folder ref
-  fastq1=simulated_1.fastq
-  fastq2=simulated_2.fastq
+  Sherman -cr $cr -e $e -l $len -n $nread --genome_folder ref
+  fastq=simulated.fastq
 }*
 
 deftask sample( <s> : lo hi n ) in r *{
   s = sample( lo:hi, n )
 }*
 
-deftask trim-galore( trimmed1( File ) trimmed2( File ) : [fastq1( File ) fastq2( File )] )in bash *{
-  trim_galore --paired $fastq1 $fastq2
-  trimmed1=`ls *_val_1.fq`
-  trimmed2=`ls *_val_2.fq`
+deftask trim-galore( trimmed : fastq( File ) )in bash *{
+  trim_galore --rrbs --illumina $fastq
+  trimmed=`ls *_trimmed.*`
 }*
 
 
 // INPUT DATA
 
-lonread  =  9000;
-hinread  = 10000;
-nsplit   =     1;
-len      =   100;
-cr       =    10;
+lonread  =   9000;
+hinread  =  10000;
+nsplit   =      1;
+len      =     80;
+cr       =     90;
+e        = '0.01';
 
-fa-tar = 'hg38/hg38.tar';
+fa-tar = 'hg19/hg19.tar';
 
 
 // WORKFLOW DEFINITION
@@ -111,23 +109,23 @@ s = sample(
   hi: hinread,
   n:  nsplit );
 
-fastq1 fastq2 = sherman(
+fastq = sherman(
   len:   len,
   nread: s,
   fa:    fa,
-  cr:    cr );
+  cr:    cr,
+  e:     e );
 
-trimmed1 trimmed2 = trim-galore( fastq1: fastq1, fastq2: fastq2 );
+trimmed = trim-galore( fastq: fastq );
 
 
 bam = bismark-align(
   idx:    idx,
-  fastq1: trimmed1,
-  fastq2: trimmed2 );
+  fastq: trimmed );
 
 out = bismark-extract( bam: bam );
 
 qc = fastqc( fastq: fastq1 fastq2 );
 
 // QUERY
-out qc;
+bam;
