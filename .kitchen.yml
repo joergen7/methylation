@@ -1,6 +1,8 @@
 ---
 driver:
   name: vagrant
+  customize:
+    memory: 2048
 
 provisioner:
   name: chef_zero
@@ -12,18 +14,5 @@ suites:
   - name: default
     run_list:
       - recipe[methylation::_common]
-      - recipe[chef-bioinf-worker::bismark]
-      - recipe[chef-bioinf-worker::cutadapt]
-      - recipe[chef-bioinf-worker::fastqc]
-      - recipe[chef-bioinf-worker::sherman]
-      - recipe[chef-bioinf-worker::bsmooth]
-      - recipe[chef-bioinf-worker::bsseq]
-      - recipe[chef-bioinf-worker::sratools]
-      - recipe[chef-bioinf-worker::trimgalore]
-      - recipe[chef-bioinf-worker::hg38]
-      - recipe[chef-bioinf-worker::shrimp]
-      - recipe[chef-bioinf-worker::pass]
-      - recipe[chef-bioinf-worker::bfast]      
-      - recipe[chef-cuneiform::default]
       - recipe[methylation::default]
     attributes:
