@@ -38,6 +38,7 @@ deftask fastq-dump( fastq1( File ) fastq2( File ) : sra( File ) )in bash *{
 
 // gunzip
 deftask gunzip( out( File ) : gz( File ) )in bash *{
+  out=${gz%.gz}
   gzip -c -d $gz > $out
 }*
 
@@ -55,17 +56,16 @@ deftask bismark-prepare( idx( File ) : fa( File ) )in bash *{
   tar chf $idx ref
 }*
 
-deftask bismark-align( bam( File ) : idx( File ) fastq( File  ) )in bash *{
+deftask bismark-align( sam( File ) : idx( File ) fastq( File  ) )in bash *{
   tar xf $idx
-  bismark --bowtie2 -N 1 -L 20 --phred33-quals ref $fastq
-  bam=${fastq}_bismark_bt2.bam
+  bismark --sam --bowtie2 -N 1 -L 20 --phred33-quals ref $fastq
+  sam=${fastq}_bismark_bt2.sam
 }*
 
-deftask bismark-extract( splitreport( File ) mbias( File ) : bam( File ) )in bash *{
-  bismark_methylation_extractor $bam
-
-  splitreport=${bam}_splitting_report.txt
-  mbias=${bam::-4}.M-bias.txt
+deftask bismark-extract( bismark_cov( File ) bedgraph( File ) : sam( File ) )in bash *{
+  bismark_methylation_extractor -s --comprehensive --bedGraph $sam
+  bedgraph=`ls *.bedGraph.gz`
+  bismark_cov=`ls *.bismark.cov.gz`
 }*
 
 // sherman
@@ -80,10 +80,26 @@ deftask sample( <s> : lo hi n ) in r *{
   s = sample( lo:hi, n )
 }*
 
-deftask trim-galore( trimmed : fastq( File ) )in bash *{
+deftask trim-galore( trimmed( File ) : fastq( File ) )in bash *{
   trim_galore --rrbs --illumina $fastq
   trimmed=`ls *_trimmed.*`
 }*
+
+// samtools
+deftask samtools-view( bam( File ) : sam( File ) )in bash *{
+  samtools view -bS $sam > $bam
+}*
+
+deftask samtools-sort( sortedbam( File ) : bam( File ) )in bash *{
+  sortedbam=alignment-sorted.bam
+  samtools sort -m 2G $bam alignment-sorted
+}*
+
+deftask samtools-index( bai( File ): bam( File ) )in bash *{
+  bai=$bam.bai
+  samtools index $bam
+}*
+
 
 
 // INPUT DATA
@@ -95,12 +111,14 @@ len      =     80;
 cr       =     90;
 e        = '0.01';
 
-fa-tar = 'hg19/hg19.tar';
+// fa-tar = 'hg19/hg19.tar';
+fa-gz = 'hg19/chr22.fa.gz';
 
 
 // WORKFLOW DEFINITION
 
-fa = untar( tar: fa-tar );
+// fa = untar( tar: fa-tar );
+fa = gunzip( gz: fa-gz );
 
 idx = bismark-prepare( fa: fa );
 
@@ -119,13 +137,16 @@ fastq = sherman(
 trimmed = trim-galore( fastq: fastq );
 
 
-bam = bismark-align(
+sam = bismark-align(
   idx:    idx,
   fastq: trimmed );
+  
+bam = samtools-sort( bam: samtools-view( sam: sam ) );
+bai = samtools-index( bam: bam );
 
-out = bismark-extract( bam: bam );
+bismark-cov bedgraph = bismark-extract( sam: sam );
 
-qc = fastqc( fastq: fastq1 fastq2 );
+qc = fastqc( fastq: fastq );
 
 // QUERY
-bam;
+bedgraph bismark-cov bam bai;
