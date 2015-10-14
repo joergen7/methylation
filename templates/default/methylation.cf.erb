@@ -100,7 +100,54 @@ deftask samtools-index( bai( File ): bam( File ) )in bash *{
   samtools index $bam
 }*
 
-deftask report( pdf( File ) : )in r *{
+deftask report( pdf_file( File ) : <cov_ctl( File )> <cov_case( File )> )in r *{
+
+  library("bsseq")
+  
+  pdf_file = "differentially_methylated_regions.pdf"
+  
+  input_coverage_data = read.bismark(  
+    c(
+      cov_ctl,
+      cov_case
+    ),
+    sampleNames = c(
+      cov_ctl,
+      cov_case
+    )
+  )
+  
+  index_control = 1:length( cov_ctl )
+  index_case    = index_control+length( cov_ctl )
+  
+  BS.cov = getCoverage(input_coverage_data)
+  # now filter for positions with sufficient coverage
+  keepLoci.ex = which(rowSums( BS.cov[, index_control ] >= 2) >= 2 & rowSums(BS.cov[, index_case ] >= 2) >= 2)
+  input_coverage_data_filt = input_coverage_data[keepLoci.ex,]
+  
+  # now smoothen
+  input_coverage_data_filt = BSmooth(  input_coverage_data_filt, mc.cores = 1, verbose = T)
+  
+  input_coverage_data.tstat = BSmooth.tstat(
+    
+    input_coverage_data_filt[1:10**5,],
+    group1 = as.character( pData( input_coverage_data_filt  )$sample_name[ index_control  ] ),
+    group2 = as.character( pData( input_coverage_data_filt  )$sample_name[ index_case     ] ),
+    estimate.var = "group2",
+    #local.correct = T,
+    verbose = T
+  )
+  
+  dmrs0 = dmrFinder( input_coverage_data.tstat, cutoff = c( -1, 1 ) )
+  dmrs = subset(dmrs0, n >= 3 & abs(meanDiff) >= 0.1)
+  pData$col = rep(c("red", "blue"), each = length(cov_ctl) ) # assuming only fair number of samples
+  pData( input_coverage_data_filt) = pData
+  
+  pdf(file = pdf_file, width = 10, height = 5)
+    plotManyRegions( input_coverage_data_filt, dmrs[ 1 : dim( dmrs )[ 1 ], ], extend = 5000, addRegions = dmrs)
+  dev.off()
+  
+
 
 }*
 
@@ -108,8 +155,6 @@ deftask report( pdf( File ) : )in r *{
 
 // INPUT DATA
 
-lonread  =   9000;
-hinread  =  10000;
 nsplit   =      1;
 len      =     80;
 cr       =     90;
@@ -126,31 +171,46 @@ fa = gunzip( gz: fa-gz );
 
 idx = bismark-prepare( fa: fa );
 
-s = sample(
-  lo: lonread,
-  hi: hinread,
-  n:  nsplit );
-
-fastq = sherman(
+fastq_case = sherman(
   len:   len,
-  nread: s,
+  nread: 2000000 2000001,
+  fa:    fa,
+  cr:    cr,
+  e:     e );
+  
+fastq_ctl = sherman(
+  len:   len,
+  nread: 2000010 2000011,
   fa:    fa,
   cr:    cr,
   e:     e );
 
-trimmed = trim-galore( fastq: fastq );
+trimmed_case = trim-galore( fastq: fastq_case );
+trimmed_ctl = trim-galore( fastq: fastq_ctl );
 
 
-sam = bismark-align(
+sam_case = bismark-align(
   idx:    idx,
-  fastq: trimmed );
+  fastq: trimmed_case );
   
-bam = samtools-sort( bam: samtools-view( sam: sam ) );
-bai = samtools-index( bam: bam );
+sam_ctl = bismark-align(
+  idx:    idx,
+  fastq: trimmed_ctl );
 
-bismark-cov bedgraph = bismark-extract( sam: sam );
+bam_case = samtools-sort( bam: samtools-view( sam: sam_case ) );
+bam_ctl = samtools-sort( bam: samtools-view( sam: sam_ctl ) );
 
-qc = fastqc( fastq: fastq );
+bai_case = samtools-index( bam: bam_case );
+bai_ctl = samtools-index( bam: bam_ctl );
+
+cov_case bedgraph_case = bismark-extract( sam: sam_case );
+cov_ctl bedgraph_ctl = bismark-extract( sam: sam_ctl );
+
+qc = fastqc( fastq: fastq_case fastq_ctl );
+
+pdf = report(
+        cov_ctl: cov_ctl
+        cov_case: cov_case );
 
 // QUERY
-bedgraph bismark-cov bam bai;
+pdf;
