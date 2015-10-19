@@ -7,7 +7,7 @@
  *   FastQC
  *   cutadapt
  *   trim galore
- *   r-base
+ *   bsseq
  */
 
 // TASK DEFINITION
@@ -94,6 +94,21 @@ deftask samtools-sort( sortedbam( File ) : bam( File ) )in bash *{
 deftask samtools-index( bai( File ): bam( File ) )in bash *{
   bai=$bam.bai
   samtools index $bam
+}*
+
+deftask samtools-merge( merged( File ) : <bam( File )> )in bash *{
+  if [ ${#bam[@]} -eq "0" ]
+  then
+    echo "No files to merge." >&2
+    exit -1
+  else
+    if [ ${#bam[@]} -eq "1" ]
+    then
+      merged=$bam
+    else
+      samtools merge -f $merged ${bam[@]}
+    fi
+  fi
 }*
 
 deftask report( pdf_file( File ) : <cov_ctl( File )> <cov_case( File )> )in r *{
@@ -193,8 +208,8 @@ sam_ctl = bismark-align(
   idx:    idx,
   fastq: trimmed_ctl );
 
-bam_case = samtools-sort( bam: samtools-view( sam: sam_case ) );
-bam_ctl = samtools-sort( bam: samtools-view( sam: sam_ctl ) );
+bam_case = samtools-merge( bam: samtools-sort( bam: samtools-view( sam: sam_case ) ) );
+bam_ctl = samtools-merge( bam: samtools-sort( bam: samtools-view( sam: sam_ctl ) ) );
 
 bai_case = samtools-index( bam: bam_case );
 bai_ctl = samtools-index( bam: bam_ctl );
@@ -209,4 +224,4 @@ pdf = report(
         cov_case: cov_case );
 
 // QUERY
-pdf;
+pdf qc bam_case bai_case bam_ctl bai_ctl;
