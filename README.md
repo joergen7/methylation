@@ -1,8 +1,8 @@
 # Differential and non-differential methylation analyses
 
-Effectively and reliably uncovering complex differential methylation patterns between e.g. cancerous and non-cancerous tissue remains challenging. A plethora of tools has been developed, used and partially being rendered legacy. Here we show the updated version of the highly cited Merman legacy algorithm [Hansen et al. 2011](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3491411/) for differential methylation analysis with the state-of-the-art tool Bismark in combination with the sophisticated Bsseq R statistics.
+Effectively and reliably uncovering complex differential methylation patterns between e.g. cancerous and non-cancerous tissue remains challenging. A plethora of tools has been developed, used and partially being rendered legacy. Here we show the updated version of the highly cited Merman legacy algorithm [Hansen et al. 2011](http://www.nature.com/ng/journal/v43/n8/full/ng.865.html) for differential methylation analysis with the state-of-the-art tool Bismark in combination with the sophisticated Bsseq R statistics.
 
-Hansen et al. 2010 Merman workflow has been implemented with slight variation as described in
+Hansen et al. 2011 Merman workflow has been implemented with slight variation as described in
 [Hansen et al. 2012](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3491411/).
 The developed Cuneiform workflow consists of various tools, algorithms and scripts, ranging from raw read trimming to the high-level final statistical analyses  to identifies differentially DNA-methylated regions (cDMRs) by comparing multiple control sample to multiple case samples.
 
