@@ -3,7 +3,7 @@
 Effectively and reliably uncovering complex differential methylation patterns between e.g. cancerous and non-cancerous tissue remains challenging. A plethora of tools has been developed, used and partially being rendered legacy. Here we show the updated version of the highly cited Merman legacy algorithm [Hansen et al. 2011](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3145050/) for differential methylation analysis with the state-of-the-art tool Bismark in combination with the sophisticated Bsseq R statistics.
 
 Hansen et al. 2010 Merman workflow has been implemented with slight variation as described in
-[Hansen et al. 2012](http://www.biomedcentral.com/content/pdf/gb-2012-13-10-r83.pdf).
+[Hansen et al. 2012](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3491411/).
 The developed Cuneiform workflow consists of various tools, algorithms and scripts, ranging from raw read trimming to the high-level final statistical analyses  to identifies differentially DNA-methylated regions (cDMRs) by comparing multiple control sample to multiple case samples.
 
 The input for this workflow are whole-genome bisulfite sequencing reads in FastQ
