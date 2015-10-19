@@ -1,6 +1,6 @@
 # Differential and non-differential methylation analyses
 
-Effectivly and reliably uncovering complex differential methylation patterns between e.g. cancerous and non-cancerous tissue remains challenging. A plethora of tools has been developed, used and partially being rendered legacy. Here we show the updated version of the highly cited Merman legacy algorithm [Hansen et al. 2011](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3145050/) for differential methylation analysis with the state-of-the-art tool Bismark in combination with the sophisticated Bsseq R statististics.
+Effectively and reliably uncovering complex differential methylation patterns between e.g. cancerous and non-cancerous tissue remains challenging. A plethora of tools has been developed, used and partially being rendered legacy. Here we show the updated version of the highly cited Merman legacy algorithm [Hansen et al. 2011](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3145050/) for differential methylation analysis with the state-of-the-art tool Bismark in combination with the sophisticated Bsseq R statistics.
 
 Hansen et al. 2010 Merman workflow has been implemented with slight variation as described in
 [Hansen et al. 2012](http://www.biomedcentral.com/content/pdf/gb-2012-13-10-r83.pdf).
@@ -16,7 +16,7 @@ the original study, Merman, has stopped being supported read mapping is
 performed using Bismark and Bowtie2 instead. Coverage information and BED graphs
 are also derived using Bismark.
 
-Non differential methylation analyses can be performed by simply de-multiplexing the R-Skript analysis after smoothening.
+Non differential methylation analyses can be performed by simply de-multiplexing the R-Script analysis after smoothing.
 
 From the SAM alignment files output by Bismark, sorted, indexed BAM files are
 created to be used in genome browsers like IGV.
