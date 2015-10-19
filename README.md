@@ -8,6 +8,16 @@ slight variation of the methods as described in
 
 
 
+
+The
+[workflow](https://github.com/joergen7/methylation/blob/master/templates/default/methylation.cf.erb)
+is specified using the
+[Cuneiform](https://github.com/joergen7/cuneiform) functional workflow language.
+
+This repository has the form of a Chef cookbook to ensure reproducibility of the
+workflow itself as well as data and tools.
+
+
 ## Prerequisites
 
 Install the following packages:
@@ -62,24 +72,4 @@ Now, execute the workflow script by entering
     cuneiform -w /opt/data /opt/wf/methylation.cf
     
     
-## Synchronizing with the remote repository
 
-To synchronize your local repository with the remote version at Github change to
-the cookbook directory and enter
-
-    git pull
-    berks update
-    kitchen converge
-    
-If you have doubts whether the VM is still in a usable state you can destroy it
-before converging.
-    
-    
-## Share your changes
-
-To make your changes public, you need to merge your changes to with the remote
-repository. Do so by changing to the cookbook directory and entering:
-
-    git add --all
-    git commit
-    git push
