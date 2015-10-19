@@ -118,11 +118,11 @@ deftask report( pdf_file( File ) : <cov_ctl( File )> <cov_case( File )> )in r *{
   
   BS.cov = getCoverage(input_coverage_data)
   # now filter for positions with sufficient coverage
-  keepLoci.ex = which(rowSums( BS.cov[, index_control ] >= 2) >= 2 & rowSums(BS.cov[, index_case ] >= 2) >= 2)
+  keepLoci.ex = which(rowSums( BS.cov[, index_control ] >= 2 ) >= 2 & rowSums(BS.cov[, index_case ] >= 2) >= 2)
   input_coverage_data_filt = input_coverage_data[keepLoci.ex,]
   
   # now smoothen
-  input_coverage_data_filt = BSmooth(  input_coverage_data_filt, mc.cores = 1, verbose = T)
+  input_coverage_data_filt = BSmooth( input_coverage_data_filt, mc.cores = 1, verbose = T )
   
   input_coverage_data.tstat = BSmooth.tstat(
     

@@ -4,10 +4,23 @@ A methylation workflow which reproduces an analysis by
 [Hansen et al. 2011](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3145050/) with
 slight variation of the methods as described in
 [Hansen et al. 2012](http://www.biomedcentral.com/content/pdf/gb-2012-13-10-r83.pdf).
+This analysis identifies differentially DNA-methylated regions (cDMRs) in a case
+sample in comparison to a control sample.
 
+The input for this workflow are whole-genome bisulfite sequencing reads in FastQ
+format. Instead of using the original data from the study we create a pair of
+methylation samples using Sherman.
 
+Trim Galore is used to account for Illumina Reduced Representation Bisulfite
+Sequencing (RRBS) representation input FastQ data. Since the read mapper used in
+the original study, Merman, has stopped being supported read mapping is
+performed using Bismark and Bowtie2 instead. Coverage information and BED graphs
+are also derived using Bismark.
 
+From the SAM alignment files output by Bismark, sorted, indexed BAM files are
+created to be used in genome browsers like IGV.
 
+The coverage information is used to create a report in PDF format using Bsmooth.
 
 The
 [workflow](https://github.com/joergen7/methylation/blob/master/templates/default/methylation.cf.erb)
