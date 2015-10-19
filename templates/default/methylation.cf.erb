@@ -76,10 +76,6 @@ deftask sherman( fastq( File ): len nread cr e <fa( File )> )in bash *{
   fastq=simulated.fastq
 }*
 
-deftask sample( <s> : lo hi n ) in r *{
-  s = sample( lo:hi, n )
-}*
-
 deftask trim-galore( trimmed( File ) : fastq( File ) )in bash *{
   trim_galore --rrbs --illumina $fastq
   trimmed=`ls *_trimmed.*`

@@ -1,5 +1,11 @@
 # methylation
-A methylation workflow
+
+A methylation workflow which reproduces an analysis by
+[Hansen et al. 2011](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3145050/) with
+slight variation of the methods as described in
+[Hansen et al. 2012](http://www.biomedcentral.com/content/pdf/gb-2012-13-10-r83.pdf).
+
+
 
 
 ## Prerequisites
