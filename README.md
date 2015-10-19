@@ -1,15 +1,14 @@
 # methylation
 
-A methylation workflow which reproduces an analysis by
-[Hansen et al. 2011](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3145050/) with
-slight variation of the methods as described in
+Effectivly and reliably uncovering complex differential methylation patterns between e.g. cancerous and non-cancerous tissue remains challenging. A plethora of tools has been developed, used and partially being rendered legacy. Here we show the updated version of the highly cited Merman legacy algorithm [Hansen et al. 2011](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3145050/) for differential methylation analysis with the state-of-the-art tool Bismark in combination with the sophisticated Bsseq R statististics.
+
+Hansen et al. 2010 Merman workflow has been implemented with slight variation as described in
 [Hansen et al. 2012](http://www.biomedcentral.com/content/pdf/gb-2012-13-10-r83.pdf).
-This analysis identifies differentially DNA-methylated regions (cDMRs) in a case
-sample in comparison to a control sample.
+The developed Cuneiform workflow consists of various tools, algorithms and scripts, ranging from raw read trimming to the high-level final statistical analyses  to identifies differentially DNA-methylated regions (cDMRs) by comparing multiple control sample to multiple case samples.
 
 The input for this workflow are whole-genome bisulfite sequencing reads in FastQ
 format. Instead of using the original data from the study we create a pair of
-methylation samples using Sherman.
+methylation samples using Sherman on chromosome 22. Reduced Representation Bisulfile Sequencing (RRBS) reads Base-Space (BS) and Abi Solid Bisulfite Color-Space (CS) sequencing technology is support. Note, that Abi Solid data is re-written to BS prior to  analysis. 
 
 Trim Galore is used to account for Illumina Reduced Representation Bisulfite
 Sequencing (RRBS) representation input FastQ data. Since the read mapper used in
