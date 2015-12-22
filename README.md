@@ -36,18 +36,24 @@ workflow itself as well as data and tools.
 
 Install the following packages:
 
-- virtualbox
-- vagrant
+- [git](https://git-scm.com/)
+- [VirtualBox](https://www.virtualbox.org/)
+- [Vagrant](https://www.vagrantup.com/)
+- [Chef Development Kit](https://downloads.chef.io/chef-dk/)
 
-The Chef DK can be downloaded from the [Chef download page](https://downloads.chef.io/chef-dk/).
-To install it enter on the command line
+Under Ubuntu you can install the ChefDK by entering on the command line
 
     sudo dpkg -i chefdk_*.deb
 
 
-## Initialize host machine
+## Building a VM with kitchen
 
-To build the VM specified in this cookbook for the first time, change your git
+This section describes how to set up the workflow environment in a Virtual
+Machine (VM). To do this, it does not matter whether you are running Linux,
+Mac OS, or Windows. However, if you are running an Ubuntu and want to set up
+the workflow locally (without creating a VM), see Section Building locally.
+
+To build a VM from this cookbook for the first time, change your git
 base directory and enter the following:
 
     git clone https://github.com/joergen7/methylation.git
@@ -63,25 +69,29 @@ You can drop the VM by entering
 
     kitchen destroy
 
+## Building locally
 
-## Workflow Location
+This workflow can also be set up in a VM (see Section Building a VM with kitchen).
+In a production environment it is, however, recommended to run the workflow locally.
 
-The Cuneiform workflow can be found in the cookbook under
+To install this cookbook locally, create a directory "cookbooks", clone the cookbook
+into it and install the dependencies:
 
-    cookbooks/methylation/templates/default/methylation.cf.erb
+    mkdir cookbooks
+    cd cookbooks
+    git clone https://github.com/joergen7/methylation.git
+    cd methylation
+    berks vendor ..
+    cd ../..
+    sudo chef-client -z -r "methylation::default"
     
-and on the test machine under
+## Running the Workflow
 
-    /opt/wf/methylation.cf
-
-    
-## Workflow execution
-
-Log into the test machine by typing
+If you installed the workflow on a VM log into the machine by typing
 
     kitchen login
     
-Now, execute the workflow script by entering
+Execute the workflow script by entering
 
     cuneiform -w /opt/data /opt/wf/methylation.cf
     
