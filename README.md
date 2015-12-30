@@ -8,7 +8,7 @@ The developed Cuneiform workflow consists of various tools, algorithms and scrip
 
 The input for this workflow are whole-genome bisulfite sequencing reads in FastQ
 format. Instead of using the original data from the study we create a pair of
-methylation samples using Sherman on chromosome 22. Reduced Representation Bisulfile Sequencing (RRBS) reads Base-Space (BS) and Abi Solid Bisulfite Color-Space (CS) sequencing technology is support. Note, that Abi Solid data is re-written to BS prior to  analysis. 
+methylation samples using Sherman on chromosome 22. Reduced Representation Bisulfile Sequencing (RRBS) reads Base-Space (BS) and Abi Solid Bisulfite Color-Space (CS) sequencing technology is supported. Note, that Abi Solid data is re-written to BS prior to  analysis. 
 
 Trim Galore is used to account for Illumina Reduced Representation Bisulfite
 Sequencing representation input FastQ data. Since the read mapper used in
