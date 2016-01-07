@@ -205,7 +205,7 @@ cov_ctl bedgraph_ctl = bismark-extract( sam: sam_ctl );
 qc = fastqc( fastq: fastq_case fastq_ctl );
 
 pdf = report(
-        cov_ctl: cov_ctl
+        cov_ctl: cov_ctl,
         cov_case: cov_case );
 
 // QUERY
