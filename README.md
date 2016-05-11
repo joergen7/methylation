@@ -1,36 +1,12 @@
 # Methylation Analysis
 
-Effectively and reliably uncovering complex differential methylation patterns between e.g. cancerous and non-cancerous tissue remains challenging. A plethora of tools has been developed, used and partially being rendered legacy. Here we show the updated version of the highly cited Merman legacy algorithm [Hansen et al. 2011](http://www.nature.com/ng/journal/v43/n8/full/ng.865.html) for differential methylation analysis with the state-of-the-art tool Bismark in combination with the sophisticated Bsseq R statistics.
-
-Hansen et al. 2011 Merman workflow has been implemented with slight variation as described in
+This workflow compares a case and a control sample identifying differences in
+DNA methylation. It reimplements a publication by
 [Hansen et al. 2012](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3491411/).
-The developed Cuneiform workflow consists of various tools, algorithms and scripts, ranging from raw read trimming to the high-level final statistical analyses  to identifies differentially DNA-methylated regions (cDMRs) by comparing multiple control sample to multiple case samples.
 
-The input for this workflow are whole-genome bisulfite sequencing reads in FastQ
-format. Instead of using the original data from the study we create a pair of
-methylation samples using Sherman on chromosome 22. Reduced Representation Bisulfile Sequencing (RRBS) reads Base-Space (BS) and Abi Solid Bisulfite Color-Space (CS) sequencing technology is supported. Note, that Abi Solid data is re-written to BS prior to  analysis. 
+A detailed description can be found on the [Cuneiform website](http://cuneiform-lang.org/examples/2015/12/30/methylation/). This cookbook installs all necessary tools, downloads all necessary data, sets up Cuneiform, and places the [workflow](https://github.com/joergen7/methylation/blob/master/templates/default/methylation.cf.erb) in a predetermined location. The cookbook can be run on any system in a virtual machine. For running the cookbook natively, an Ubuntu 14.04 or higher is required.
 
-Trim Galore is used to account for Illumina Reduced Representation Bisulfite
-Sequencing representation input FastQ data. Since the read mapper used in
-the original study, Merman, has stopped being supported read mapping is
-performed using Bismark and Bowtie2 instead. Coverage information and BED graphs
-are also derived using Bismark.
-
-Non differential methylation analyses can be performed by simply de-multiplexing the R-Script analysis after smoothing.
-
-From the SAM alignment files output by Bismark, sorted, indexed BAM files are
-created to be used in genome browsers like IGV.
-
-The coverage information is used to create a report in PDF format using Bsmooth.
-
-The
-[workflow](https://github.com/joergen7/methylation/blob/master/templates/default/methylation.cf.erb)
-is specified using the
-[Cuneiform](https://github.com/joergen7/cuneiform) functional workflow language.
-
-This repository has the form of a Chef cookbook to ensure reproducibility of the
-workflow itself as well as data and tools.
-
+Below you find installation instructions for, both, the native and the virtual machine setup.
 
 ## Prerequisites
 
