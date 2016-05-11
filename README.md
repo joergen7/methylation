@@ -1,4 +1,4 @@
-# Differential and non-differential methylation analyses
+# Methylation Analysis
 
 Effectively and reliably uncovering complex differential methylation patterns between e.g. cancerous and non-cancerous tissue remains challenging. A plethora of tools has been developed, used and partially being rendered legacy. Here we show the updated version of the highly cited Merman legacy algorithm [Hansen et al. 2011](http://www.nature.com/ng/journal/v43/n8/full/ng.865.html) for differential methylation analysis with the state-of-the-art tool Bismark in combination with the sophisticated Bsseq R statistics.
 

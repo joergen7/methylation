@@ -53,6 +53,7 @@ deftask bismark-prepare( idx( File ) : fa( File ) )in bash *{
   mkdir ref
   (cd ref; ln -s ../$fa)
   bismark_genome_preparation --bowtie2 ref
+  idx=idx.tar
   tar chf $idx ref
 }*
 
@@ -83,6 +84,7 @@ deftask trim-galore( trimmed( File ) : fastq( File ) )in bash *{
 
 // samtools
 deftask samtools-view( bam( File ) : sam( File ) )in bash *{
+  bam=${sam%.sam}.bam
   samtools view -bS $sam > $bam
 }*
 
@@ -154,10 +156,10 @@ deftask report( pdf_file( File ) : <cov_ctl( File )> <cov_case( File )> )in r *{
 nsplit   =      1;
 len      =     80;
 cr       =     90;
-e        = '0.01';
+e        = "0.01";
 
-// fa-tar = 'hg19/hg19.tar';
-fa-gz = 'hg19/chr22.fa.gz';
+// fa-tar = "hg19/hg19.tar";
+fa-gz = "hg19/chr22.fa.gz";
 
 
 // WORKFLOW DEFINITION
