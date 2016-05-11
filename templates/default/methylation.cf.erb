@@ -89,8 +89,8 @@ deftask samtools-view( bam( File ) : sam( File ) )in bash *{
 }*
 
 deftask samtools-sort( sortedbam( File ) : bam( File ) )in bash *{
-  sortedbam=alignment-sorted.bam
-  samtools sort -m 2G $bam alignment-sorted
+  sortedbam=sorted.bam
+  samtools sort -m 2G $bam -o $sortedbam
 }*
 
 deftask samtools-index( bai( File ): bam( File ) )in bash *{
