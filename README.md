@@ -4,7 +4,7 @@ This workflow compares a case and a control sample identifying differences in
 DNA methylation. It reimplements a publication by
 [Hansen et al. 2012](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3491411/).
 
-A detailed description can be found on the [Cuneiform website](http://cuneiform-lang.org/examples/2015/12/30/methylation/). This cookbook installs all necessary tools, downloads all necessary data, sets up Cuneiform, and places the [workflow](https://github.com/joergen7/methylation/blob/master/templates/default/methylation.cf.erb) in a predetermined location. The cookbook can be run on any system in a virtual machine. For running the cookbook natively, an Ubuntu 14.04 or higher is required.
+A detailed description can be found on the [Cuneiform website](http://cuneiform-lang.org/examples/2015/12/30/methylation/). This cookbook installs all necessary tools, downloads all necessary data, sets up Cuneiform, and places the [workflow](https://github.com/joergen7/methylation/blob/master/templates/default/methylation.cf.erb) in a predetermined location. The cookbook can be run on any system in a virtual machine. For running the cookbook natively, an Ubuntu 16.04 or higher is required.
 
 Below you find installation instructions for, both, the native and the virtual machine setup.
 
