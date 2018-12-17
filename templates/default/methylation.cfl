@@ -1,0 +1,336 @@
+% METHYLATION
+%
+% a methylation workflow
+%
+%
+% Copyright:: 2015-2018 Jörgen Brandt
+%
+% Licensed under the Apache License, Version 2.0 (the "License");
+% you may not use this file except in compliance with the License.
+% You may obtain a copy of the License at
+%
+%    http://www.apache.org/licenses/LICENSE-2.0
+%
+% Unless required by applicable law or agreed to in writing, software
+% distributed under the License is distributed on an "AS IS" BASIS,
+% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+% See the License for the specific language governing permissions and
+% limitations under the License.
+%
+%
+% Sample data can be obtained from:
+% ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/phase3/data/HG02025/sequence_read/
+%
+% The HG38 reference genome can be downloaded from
+% http://hgdownload.soe.ucsc.edu/goldenPath/hg38/chromosomes/
+%
+% An Annovar HG38 database is expected to reside in
+% /opt/data/annodb_hg38
+%
+% In addition to a Cuneiform interpreter the following tools need to be
+% installed to run this analysis:
+% - Sherman 0.1.8
+% - Trim Galore 0.5.0
+%
+%--------------------------------------------------------------
+
+%%=============================================================
+%% Task definitions
+%%=============================================================
+
+%% Utility functions ------------------------------------------
+
+def gunzip( gz : File ) ->
+      <file : File>
+in Bash *{
+  file=unzipped_${gz%.gz}
+  gzip -c -d $gz > $file
+}*
+
+%% FastQC -----------------------------------------------------
+
+def fastqc( fastq : File ) ->
+      <zip : File>
+in Bash *{
+  fastqc -f fastq --noextract -o ./ $fastq
+  zip=`ls *.zip`
+}*
+
+%% Sherman ----------------------------------------------------
+
+def sherman( falst : [File],
+             nread : Str,
+             len   : Str,
+             cr    : Str,
+             e     : Str ) ->
+  <fastq : File>
+in Bash *{
+  mkdir ref
+  (cd ref; for i in ${falst[@]}; do ln -s ../$i; done)
+  Sherman -cr $cr -e $e -l $len -n $nread --genome_folder ref
+  fastq=simulated.fastq
+}*
+
+%% Trim Galore ------------------------------------------------
+
+def trim-galore( fastq : File ) ->
+  <trimmed : File>
+in Bash *{
+  trim_galore --rrbs --illumina $fastq
+  trimmed=`ls *_trimmed.*`
+}*
+
+
+%% SAMtools ---------------------------------------------------
+
+def samtools-view( sam : File ) ->
+  <bam : File>
+in Bash *{
+  bam=${sam%.sam}.bam
+  samtools view -bS $sam > $bam
+}*
+
+
+def samtools-sort( bam : File ) ->
+      <sorted : File>
+in Bash *{
+  sorted=sorted.bam
+  samtools sort -m 2G $bam -o $sorted
+}*
+
+
+def samtools-merge( bam-lst : [File] ) ->
+      <merged : File>
+{
+
+  def samtools-merge( bams : [File] ) ->
+        <merged : File>
+
+  in Bash *{
+    merged=merged.bam
+    if [ ${#bams[@]} -eq "1" ]
+    then
+      merged=$bam
+    else
+      samtools merge -f $merged ${bams[@]}
+    fi
+  }*
+
+  if isnil bam-lst
+  then
+    error "Merge list must not be empty." : <merged : File>
+  else
+    samtools-merge( bams = bam-lst )
+  end
+}
+
+
+%% Bismark ----------------------------------------------------
+
+def bismark-prepare( fa : File ) ->
+  <idx : File>
+in Bash *{
+  mkdir ref
+  (cd ref; ln -s ../$fa)
+  bismark_genome_preparation --bowtie2 ref
+  idx=idx.tar
+  tar chf $idx ref
+}*
+
+
+def bismark-align( idx : File, fastq : File ) ->
+  <sam : File>
+in Bash *{
+  tar xf $idx
+  bismark --sam --bowtie2 -N 1 -L 20 --phred33-quals ref $fastq
+  sam=${fastq}_bismark_bt2.sam
+}*
+
+
+def bismark-extract( sam : File ) ->
+  <cov : File, bedgraph : File>
+in Bash *{
+  bismark_methylation_extractor -s --comprehensive --bedGraph $sam
+  bedgraph=`ls *.bedGraph.gz`
+  cov=`ls *.bismark.cov.gz`
+}*
+
+
+%% BSSeq ------------------------------------------------------
+
+def report( casecov : [File], ctlcov: [File] ) ->
+  <pdffile : File>
+in R *{
+
+  library("bsseq")
+  
+  pdffile = "differentially_methylated_regions.pdf"
+  
+  input_coverage_data = read.bismark(  
+    c(
+      ctlcov,
+      casecov
+    ),
+    sampleNames = basename( c(
+      ctlcov,
+      casecov
+    ) )
+  )
+  
+  index_control = 1:length( ctlcov )
+  index_case    = index_control+length( ctlcov )
+  
+  BS.cov = getCoverage(input_coverage_data)
+  # now filter for positions with sufficient coverage
+  keepLoci.ex = which(rowSums( BS.cov[, index_control ] >= 2 ) >= 2 & rowSums(BS.cov[, index_case ] >= 2) >= 2)
+  input_coverage_data_filt = input_coverage_data[keepLoci.ex,]
+  
+  # now smoothen
+  input_coverage_data_filt = BSmooth( input_coverage_data_filt, mc.cores = 1, verbose = T )
+  
+  input_coverage_data.tstat = BSmooth.tstat(
+    
+    input_coverage_data_filt[1:10**5,],
+    group1 = basename( ctlcov ),
+    group2 = basename( casecov ),
+    estimate.var = "group2",
+    #local.correct = T,
+    verbose = T
+  )
+  
+  dmrs0 = dmrFinder( input_coverage_data.tstat, cutoff = c( -1, 1 ) )
+  dmrs = subset(dmrs0, n >= 3 & abs(meanDiff) >= 0.1)
+  col = rep(c("red", "blue"), each = length(ctlcov) ) # assuming only fair number of samples
+  pData( input_coverage_data_filt)$col = col
+  
+  pdf(file = pdffile, width = 10, height = 5)
+    plotManyRegions( input_coverage_data_filt, dmrs[ 1 : dim( dmrs )[ 1 ], ], extend = 5000, addRegions = dmrs)
+  dev.off()
+}*
+
+
+
+def generate-trimmed( fa-lst    : [File],
+                      nread-lst : [Str],
+                      len       : Str,
+                      cr        : Str,
+                      e         : Str ) ->
+  [File]
+{
+  for nread : Str <- nread-lst do
+
+    let <fastq = fastq : File> =
+      sherman( falst = fa-lst,
+               nread = nread,
+               len   = len,
+               cr    = cr,
+               e     = e );
+
+    let <trimmed = trimmed : File> =
+      trim-galore( fastq = fastq );
+
+    trimmed : File
+
+  end
+}
+
+def process-sample( trimmed-lst : [File], idx : File ) -> [File] {
+
+  for trimmed : File <- trimmed-lst do
+
+    % align sample to reference index
+    let <sam = sam : File> =
+      bismark-align( idx = idx, fastq = trimmed );
+
+    % extract coverage graph
+    let <cov = cov : File> =
+      bismark-extract( sam = sam );
+
+    cov : File
+
+  end
+}
+
+
+
+%%=============================================================
+%% Input data
+%%=============================================================
+
+let nsplit : Str =  1;
+let len    : Str = 80;
+let cr     : Str = 90;
+let e      : Str = "0.01";
+
+let fa-gz : File = 'chr22.fa.gz';
+
+%%=============================================================
+%% Workflow definition
+%%=============================================================
+
+% decompress reference sequence
+let <file = fa : File> =
+  gunzip( gz = fa-gz );
+
+
+% generate sample pair
+%
+% Note that Cuneiform assumes external functions to be deterministic
+% and caches accordingly. So calling Sherman four times with the same
+% parameters would yield four identical samples. The trick is to vary
+% the sample size slightly creating four genuine calls to Sherman.
+
+let case-trimmed-lst : [File] =
+  generate-trimmed( fa-lst    = [fa : File],
+                    nread-lst = [2000000, 2000001 : Str],
+                    len       = len,
+                    cr        = cr,
+                    e         = e );
+
+let ctl-trimmed-lst : [File] =
+  generate-trimmed( fa-lst    = [fa : File],
+                    nread-lst = [2000010, 2000011 : Str],
+                    len       = len,
+                    cr        = cr,
+                    e         = e );
+
+% quality control for trimmed sample
+
+let qc-lst : [File] =
+  for fastq : File <- ( case-trimmed-lst+ctl-trimmed-lst ) do
+    
+    let <zip = zip : File> =
+      fastqc( fastq = fastq );
+
+    zip : File
+
+  end;
+
+% index reference genome
+
+let <idx = idx : File> =
+  bismark-prepare( fa = fa );
+
+
+% process sample pair to get coverage
+let case-cov-lst : [File] =
+  process-sample( trimmed-lst = case-trimmed-lst,
+                  idx         = idx );
+
+let ctl-cov-lst : [File] =
+  process-sample( trimmed-lst = ctl-trimmed-lst,
+                  idx         = idx );
+
+
+% generate pdf report
+let <pdffile = pdf : File> =
+  report( casecov = case-cov-lst,
+          ctlcov  = ctl-cov-lst );
+
+
+%%=============================================================
+%% Query
+%%=============================================================
+
+<pdf    = pdf,
+ qc-lst = qc-lst>;

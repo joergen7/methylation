@@ -1,2 +1,5 @@
-default.dir.wf = "/opt/wf"
-default.dir.data = "/opt/data"
+default["dir"]["wf"]       = "/opt/wf"
+default["dir"]["data"]     = "/opt/data"
+default["dir"]["software"] = "/opt/software"
+default["dir"]["archive"]  = "/opt/archive"
+default["dir"]["bin"]      = "/usr/local/bin"
